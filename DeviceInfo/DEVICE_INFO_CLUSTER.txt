@@ -1,0 +1,21 @@
+compute-0-9   ---> 4 CUDA cores
+compute-0-11  ---> 2 CUDA cores
+compute-0-12  ---> 0 CUDA cores *
+compute-0-13  ---> ? CUDA cores
+compute-0-14  ---> 0 CUDA cores *
+compute-0-15  ---> ? CUDA cores
+compute-0-16  ---> 0 CUDA cores *
+compute-0-17  ---> ? CUDA cores
+compute-0-18  ---> ? CUDA cores
+compute-0-19  ---> 0 CUDA cores *
+compute-0-20  ---> ? CUDA cores
+compute-0-21  ---> ? CUDA cores
+compute-0-22  ---> 2 CUDA cores
+compute-0-23  ---> ? CUDA cores
+compute-0-24  ---> 2 CUDA cores
+compute-0-25  ---> 2 CUDA cores
+compute-0-26  ---> ? CUDA cores
+compute-0-27  ---> ? CUDA cores
+compute-0-28  ---> ? CUDA cores
+compute-0-29  ---> 2 CUDA cores
+compute-0-30  ---> 2 CUDA cores
