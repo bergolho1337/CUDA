@@ -1,0 +1,9 @@
+#!/bin/bash
+#$ -pe threaded 1
+#$ -N mycudajob
+#$ -cwd
+#$ -j y
+#$ -S /bin/bash
+export LD_LIBRARY_PATH=/share/apps/cuda/lib64:/share/apps/cuda/lib
+
+/home/berg/Paralela/CUDA/ConjGrad/conjgrad 60 1.0e-08 1000 < /home/berg/Paralela/CUDA/ConjGrad/in60
