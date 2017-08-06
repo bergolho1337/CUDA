@@ -1,8 +1,10 @@
 Steps to build the project.
 
 1) Install and configure CUDA;
+	http://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html#axzz4ozmEKlUs
 
 2) Install and configure OpenCV;
+	http://docs.opencv.org/2.4/doc/tutorials/introduction/linux_install/linux_install.html
 
 3) On the terminal, go to the build/ directory and type 
 	
