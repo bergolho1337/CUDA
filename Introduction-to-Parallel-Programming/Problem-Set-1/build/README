@@ -1,0 +1,17 @@
+Steps to build the project.
+
+1) Install and configure CUDA;
+
+2) Install and configure OpenCV;
+
+3) On the terminal, go to the build/ directory and type 
+	
+	$ cmake ..
+
+4) Compile the source code for the project by executing
+
+	$ make
+
+
+REMINDER:
+	**** Don't delete me for Github. *****
