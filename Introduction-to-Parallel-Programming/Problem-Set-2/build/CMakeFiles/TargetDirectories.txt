@@ -1,0 +1,3 @@
+/home/lucas/Documentos/Github/CUDA/Introduction-to-Parallel-Programming/Problem-Set-2/build/CMakeFiles/edit_cache.dir
+/home/lucas/Documentos/Github/CUDA/Introduction-to-Parallel-Programming/Problem-Set-2/build/CMakeFiles/rebuild_cache.dir
+/home/lucas/Documentos/Github/CUDA/Introduction-to-Parallel-Programming/Problem-Set-2/build/CMakeFiles/HW2.dir
