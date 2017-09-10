@@ -83,10 +83,7 @@
 #include <float.h>
 #include "utils.h"
 
-// ------------------------------------------------------ KERNELS -------------------------------------------------------------------
-
-// shared - cache[blockDim.x*blockDim.y]
-__global__ void gpu_reduce (const float* const in, float* out, const size_t numRows, const size_t numCols, bool ismax)
+__global__ void gpu_reduce_min (const float* const in, float* out, const size_t numRows, const size_t numCols)
 {
   extern __shared__ float cache[];
   int nElem = numRows * numCols;
@@ -102,23 +99,47 @@ __global__ void gpu_reduce (const float* const in, float* out, const size_t numR
   if (gid < nElem)
     cache[tid] = in[gid];
   __syncthreads();
-  
+
   for (int s = nCache/2; s > 0; s >>= 1)
   {
     if (tid < s)
-    {
-      if (ismax)
-        cache[tid] = max(cache[tid],cache[tid + s]);
-      else
-        cache[tid] = min(cache[tid],cache[tid + s]);
-    }
+      cache[tid] = min(cache[tid],cache[tid + s]);
     __syncthreads();
   }
 
   if (tid == 0)
   {
     out[bid] = cache[0];
-    //printf("Block[%d] = %f\n",bid,out[bid]);
+  }
+}
+
+__global__ void gpu_reduce_max (const float* const in, float* out, const size_t numRows, const size_t numCols)
+{
+  extern __shared__ float cache[];
+  int nElem = numRows * numCols;
+  int nCache = blockDim.x * blockDim.y;
+  // Index calculations
+  int col = blockIdx.y * blockDim.y + threadIdx.y;
+  int row = blockIdx.x * blockDim.x + threadIdx.x;
+  int gid = row * numCols + col;
+  int tid = threadIdx.y * blockDim.y + threadIdx.x;
+  int bid = blockIdx.x * gridDim.y + blockIdx.y;
+
+  // Copy input to shared memory
+  if (gid < nElem)
+    cache[tid] = in[gid];
+  __syncthreads();
+
+  for (int s = nCache/2; s > 0; s >>= 1)
+  {
+    if (tid < s)
+      cache[tid] = max(cache[tid],cache[tid + s]);
+    __syncthreads();
+  }
+
+  if (tid == 0)
+  {
+    out[bid] = cache[0];
   }
 }
 
@@ -126,10 +147,16 @@ __global__ void gpu_histogram (const float* const d_logLuminance, unsigned int *
                                const float logLumMin, const float logLumMax, const float logLumRange,
                                const size_t numBins)
 {
-  int gid = threadIdx.x + blockDim.x * blockIdx.x;
-  int bin = (d_logLuminance[gid] - logLumMin) / logLumRange * numBins;
-  if (bin == numBins) bin--;
-  atomicAdd(&hist[bin],1);
+  int nElem = numRows * numCols;
+  int col = blockIdx.y * blockDim.y + threadIdx.y;
+  int row = blockIdx.x * blockDim.x + threadIdx.x;
+  int gid = row * numCols + col;
+
+  if (gid < nElem)
+  {
+    int bin = (d_logLuminance[gid] - logLumMin) / logLumRange * numBins;
+    atomicAdd(&hist[bin],1);
+  }
 }
 
 __global__ void gpu_exclusive_scan (unsigned int *in, unsigned int* const out, const size_t n)
@@ -185,57 +212,68 @@ __global__ void gpu_exclusive_scan (unsigned int *in, unsigned int* const out, c
   out[2*tid+1] = cache2[2*tid+1];
 }
 
-// --------------------------------------------------------------------------------------------------------------------------------------
-// -------------------------------------------- HOST FUNCTIONS --------------------------------------------------------------------------
-
-float cpu_reduce (float *out, int n, bool ismax)
+float cpu_reduce_min (float *out, int n, int m)
 {
-  float value = out[0];
-  for (int i = 0; i < n; i++)
-  {
-    if (ismax)
-      value = max(value,out[i]);
-    else
-      value = min(value,out[i]);
-  }
-  return value;
+  float minValue = out[0];
+  for (int i = 0; i < n*m; i++)
+    minValue = min(minValue,out[i]);
+  return minValue;
 }
 
-float Reduction (const float* const d_logLuminance, const size_t numRows, const size_t numCols, bool ismax)
+float minReduction (const float* const d_logLuminance, const size_t numRows, const size_t numCols)
 {
-  float result;
-  float *d_result, *d_intermediate;
-
-  // Dimensions of the intermediate kernel
+  float *h_out, min_logLum;
+  float *d_out;
+  // Dimensions of the kernel
   dim3 blockDim(32,32);
   dim3 gridDim(numCols/blockDim.x+1,numRows/blockDim.y+1);
-  size_t sharedMem = sizeof(float)*32*32;
+  size_t sharedMem = sizeof(float)*blockDim.x*blockDim.y;
+  // Output vector of the reduction
+  size_t sizeOut = sizeof(float)*gridDim.x*gridDim.y;
+  h_out = (float*)malloc(sizeOut);
+  checkCudaErrors(cudaMalloc(&d_out,sizeOut)); 
+
+  // Call the min reduction kernel
+  gpu_reduce_min<<<gridDim,blockDim,sharedMem>>>(d_logLuminance,d_out,numRows,numCols);
+  checkCudaErrors(cudaMemcpy(h_out,d_out,sizeOut,cudaMemcpyDeviceToHost));
+  min_logLum = cpu_reduce_min(h_out,gridDim.x,gridDim.y);
+
+  free(h_out);
+  checkCudaErrors(cudaFree(d_out));
   
-  // Intermediate vector of the reduction
-  size_t sizeInterm = sizeof(float)*gridDim.x*gridDim.y;
-  checkCudaErrors(cudaMalloc(&d_intermediate,sizeInterm));
+  return min_logLum;
+}
+
+float cpu_reduce_max (float *out, int n, int m)
+{
+  float maxValue = out[0];
+  for (int i = 0; i < n*m; i++)
+    maxValue = max(maxValue,out[i]);
+  return maxValue;
+}
+
+float maxReduction (const float* const d_logLuminance, const size_t numRows, const size_t numCols)
+{
+  float *h_out, max_logLum;
+  float *d_out;
+  // Dimensions of the kernel
+  dim3 blockDim(32,32);
+  dim3 gridDim(numCols/blockDim.x+1,numRows/blockDim.y+1);
+  size_t sharedMem = sizeof(float)*blockDim.x*blockDim.y;
+  // Output vector of the reduction
+  size_t sizeOut = sizeof(float)*gridDim.x*gridDim.y;
+  h_out = (float*)malloc(sizeOut);
+  checkCudaErrors(cudaMalloc(&d_out,sizeOut)); 
+
+  // Call the max reduction kernel
+  gpu_reduce_max<<<gridDim,blockDim,sharedMem>>>(d_logLuminance,d_out,numRows,numCols);
+  checkCudaErrors(cudaMemcpy(h_out,d_out,sizeOut,cudaMemcpyDeviceToHost));
+  max_logLum = cpu_reduce_max(h_out,gridDim.x,gridDim.y);
+
+  free(h_out);
+  checkCudaErrors(cudaFree(d_out));
   
-  // Final result of the reduction
-  checkCudaErrors(cudaMalloc(&d_result, sizeof(float)));
-  
-  // Call the first reduction kernel
-  gpu_reduce<<<gridDim,blockDim,sharedMem>>>(d_logLuminance,d_intermediate,numCols,numRows,ismax);
-  
-  // Dimensions of the final kernel
-  blockDim.x = gridDim.x; blockDim.y = gridDim.y;
-  gridDim.x = 1; gridDim.y = 1;
-  
-  // Call the final kernel
-  gpu_reduce<<<gridDim,blockDim,sharedMem>>>(d_intermediate,d_result,blockDim.y,blockDim.x,ismax);
-  
-  // Copy the result to the CPU
-  checkCudaErrors(cudaMemcpy(&result,d_result,sizeof(float),cudaMemcpyDeviceToHost));
-  
-  // Free memory
-  checkCudaErrors(cudaFree(d_result));
-  checkCudaErrors(cudaFree(d_intermediate));
-  
-  return result;
+  return max_logLum;
 }
 
 unsigned int* compHistogram (const float* const d_logLuminance, const size_t numRows, const size_t numCols,
@@ -244,11 +282,9 @@ unsigned int* compHistogram (const float* const d_logLuminance, const size_t num
 {
   unsigned int *h_hist;
   unsigned int *d_hist;
-  int threads = 1024;
-  int blocks = numRows * numCols / threads;
   // Dimensions of the kernel
-  dim3 blockDim(threads,1);
-  dim3 gridDim(blocks,1);
+  dim3 blockDim(32,32);
+  dim3 gridDim(numCols/blockDim.x+1,numRows/blockDim.y+1);
   // Allocate memory for host and device histogram
   h_hist = (unsigned int*)calloc(numBins,sizeof(unsigned int));
   checkCudaErrors(cudaMalloc(&d_hist,sizeof(unsigned int)*numBins));
@@ -305,20 +341,16 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
        the cumulative distribution of luminance values (this should go in the
        incoming d_cdf pointer which already has been allocated for you)       */
 
-    // TO DO: Fazer utilizando blocos(x,y), evitar usar a funcao min e max do STD.
-
     // Step 1) Min & Max Reduction
-    min_logLum = Reduction(d_logLuminance,numRows,numCols,false);
-    max_logLum = Reduction(d_logLuminance,numRows,numCols,true);
+    min_logLum = minReduction(d_logLuminance,numRows,numCols);
+    max_logLum = maxReduction(d_logLuminance,numRows,numCols);
 
     // Step 2) Calculate the range
     float logLumRange = max_logLum - min_logLum;
-    //printf("max_logLum: %f  min_logLum: %f  logLumRange: %f\n", max_logLum, min_logLum, logLumRange);
+    printf("max_logLum: %f  min_logLum: %f  logLumRange: %f\n", max_logLum, min_logLum, logLumRange);
 
     // Step 3) Compute a histogram
     unsigned int *hist = compHistogram(d_logLuminance,numRows,numCols,min_logLum,max_logLum,logLumRange,numBins);
-    //for (int i = 0; i < numBins; i++)
-    //  printf("Bin[%d] = %d\n",i,hist[i]);
 
     // Step 4) Perform an exclusive scan on the histogram
     exclusiveScan(hist,d_cdf,numBins);
