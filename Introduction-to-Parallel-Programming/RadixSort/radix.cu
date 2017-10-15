@@ -14,7 +14,7 @@ __global__ void Gpu_Histogram (unsigned int *in, unsigned int *bins, const unsig
 }
 
 // Compute an exclusive scan on the input array and store the result on the output array
-__global__ void Gpu_ExScan (unsigned int *in, unsigned int *out, const size_t n)
+__global__ void Gpu_ExScan (unsigned int *in, unsigned int *out, const size_t n)    
 {
     extern __shared__ unsigned int cache2[];
     int tid = threadIdx.y * blockDim.x + threadIdx.x;

@@ -1,3 +1,0 @@
-/home/lucas/Documentos/Github/CUDA/Introduction-to-Parallel-Programming/Problem-Set-4/build/CMakeFiles/edit_cache.dir
-/home/lucas/Documentos/Github/CUDA/Introduction-to-Parallel-Programming/Problem-Set-4/build/CMakeFiles/rebuild_cache.dir
-/home/lucas/Documentos/Github/CUDA/Introduction-to-Parallel-Programming/Problem-Set-4/build/CMakeFiles/HW4.dir
