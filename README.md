@@ -2,11 +2,11 @@
 
 Repository with	sample codes using the CUDA/C++	library.
 
-###Pre-requisite
+### Pre-requisite
 1. Install and configure NVIDIA drivers
 2. Install and configure the CUDA library
 
-###Installing NVIDIA driver on Fedora 27
+### Installing NVIDIA driver on Fedora 27
 
 To install the NVIDIA proprietary drivers on Fedora 27 you must first update your system:
 
@@ -19,7 +19,7 @@ Then install the lastest NVIDIA drivers from the DNF repository.
 $ sudo dnf install xorg-x11-drv-nvidia akmod-nvidia
 $ sudo dnf install xorg-x11-drv-nvidia-cuda
 ```
-###Installing CUDA libraries on Fedora 27
+### Installing CUDA libraries on Fedora 27
 
 Download the last version of the CUDA Toolkit runfile. For me it was the **Linux-x86_64-Fedora-25-v9.1.run**
 
