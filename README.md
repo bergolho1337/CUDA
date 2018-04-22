@@ -42,19 +42,19 @@ $ sudo ln -s /usr/bin/g++-6 /usr/local/cuda/bin/g++
 
 The GNU/GCC version for each CUDA release can be checked below:
 
-- CUDA 4.1 release 
+- **CUDA 4.1 release** 
 	- gcc 4.5 is now supported. gcc 4.6 and 4.7 are unsupported.
-- CUDA 5.0 release 
+- **CUDA 5.0 release** 
 	- gcc 4.6 is now supported. gcc 4.7 is unsupported.
-- CUDA 6.0 release 
+- **CUDA 6.0 release** 
 	- gcc 4.7 is now supported.
-- CUDA 7.0 release
+- **CUDA 7.0 release**
 	- gcc 4.8 is fully supported, with 4.9 support on Ubuntu 14.04 and Fedora 21.
-- CUDA 7.5 release
+- **CUDA 7.5 release**
 	- gcc 4.8 is fully supported, with 4.9 support on Ubuntu 14.04 and Fedora 21.
-- CUDA 8 release
+- **CUDA 8 release**
 	- gcc 5.3 is fully supported on Ubuntu 16.06 and Fedora 23.
-- CUDA 9 release
+- **CUDA 9 release**
 	- gcc 6 is fully supported on Ubuntu 16.04, Ubuntu 17.04 and Fedora 25.
 
 The next step is to solve some bugs with the `floatn.h` header file. There is an problem when we define large float types. To prevent this, we need to add the following lines to the header file (After line 37):
@@ -77,7 +77,7 @@ Finally execute the runfile that we downloaded, specifing a folder to store some
 $ sudo sh cuda_9.1.85_387.26_linux.run --tmpdir=/home/username/tmp/ --override
 ```
 
-A minor issue that you might encounter is related to errors on the `host_config.h` file which should be located on `/usr/local/cuda-9.1/include/crt`. The errors are related might be related to the version of GCC, so I just comment with a simple `//` the error line.
+A minor issue that you might encounter is related to errors on the `host_config.h` file, which should be located on `/usr/local/cuda-9.1/include/crt`. The errors might be related to the version of GCC, so I just comment with a simple `//` the error line.
 
 ```bash
 #if __GNUC__ > 6
