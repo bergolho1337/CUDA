@@ -9,6 +9,9 @@
 
 cmake_minimum_required(VERSION 2.6 FATAL_ERROR)
 
+#SET(CMAKE_C_COMPILER /usr/bin/gcc63)
+#SET(CMAKE_CXX_COMPILER /usr/bin/g++63)
+
 find_package(CUDA REQUIRED)
 find_package(OpenCV REQUIRED)
 
