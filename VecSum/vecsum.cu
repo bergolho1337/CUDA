@@ -7,7 +7,8 @@
 // GPU function for adding two vectors 'a' and 'b'
 __global__ void add (int *a, int *b, int *c)
 {
-  // Calculate the index of the current thread of the current block
+  // Calculate the index of the current thread 
+  // of the current block
   int index = threadIdx.x + blockDim.x*blockIdx.x;
   c[index] = a[index] + b[index];
 }

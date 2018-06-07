@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "book.h"
 
 int main ()
 {
@@ -8,14 +7,14 @@ int main ()
   int count, i;
   count = 0;
   // Descobre o numero de "devices" rodando CUDA
-  HANDLE_ERROR(cudaGetDeviceCount(&count));
+  cudaGetDeviceCount(&count);
   printf("Number of devices running CUDA = %d\n",count);
   // Iterar entre todos os devices e descobrir suas propriedades
   for (i = 0; i < count; i++)
   {
     printf("======================= Device %d ========================================\n",i+1);
     // Essa funcao retorna uma struct. Varaiveis disponiveis em "CUDA_by_Example.pdf"
-    HANDLE_ERROR(cudaGetDeviceProperties(&prop,i));
+    cudaGetDeviceProperties(&prop,i);
     printf("Device Name = %s\n",prop.name);
     printf("Compute capability = %d - %d\n",prop.minor,prop.major);
     printf("Clock rate = %d\n",prop.clockRate);

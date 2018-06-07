@@ -1,5 +1,4 @@
-# Caminho do compilador no cluster do PGMC
-CCUDA = /usr/local/cuda-7.5/bin/nvcc
+CCUDA = nvcc
 CCUDA_FLAGS = -g -G
 
 hello: hello.cu

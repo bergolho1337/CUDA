@@ -1,4 +1,4 @@
-CCUDA = /usr/local/cuda-6.0/bin/nvcc
+CCUDA = nvcc
 CCUDA_FLAGS = -g -G
 
 vecsum: vecsum.cu

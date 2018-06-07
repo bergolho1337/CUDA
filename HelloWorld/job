@@ -4,6 +4,5 @@
 #$ -cwd
 #$ -j y
 #$ -S /bin/bash
-export LD_LIBRARY_PATH=/share/apps/cuda/lib64:/share/apps/cuda/lib
 
 /home/berg/Paralela/CUDA/HelloWorld/hello
